@@ -1,0 +1,863 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>교사용 대시보드 (Web)</title>
+<style>
+  :root{
+    --card-bg: rgba(255,255,255,.78);
+    --shadow: 0 12px 30px rgba(0,0,0,.08);
+    --muted: rgba(0,0,0,.06);
+    --text-muted: rgba(0,0,0,.65);
+  }
+  body{
+    margin:0;
+    font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+    background:linear-gradient(135deg,#eef2ff,#f7f7f7,#ecfeff);
+    zoom: 0.9; /* 전체 크기 조절 */
+  }
+  .wrap{ padding:22px; }
+
+  .top{
+    display:flex; gap:14px;
+    align-items:flex-end;
+    justify-content:space-between;
+    flex-wrap:wrap;
+  }
+  .title{ font-size:30px; font-weight:900; letter-spacing:-0.4px; }
+  .sub{ margin-top:6px; opacity:.8; font-size:12px; }
+
+  .controls{
+    display:flex;
+    gap:8px;
+    align-items:center;
+    flex-wrap:wrap;
+    position:relative;
+  }
+  button{
+    font-size:14px; padding:8px 10px; border-radius:12px;
+    border:1px solid rgba(0,0,0,.15);
+    background:rgba(255,255,255,.78);
+    cursor:pointer; font-weight:900;
+  }
+  .status{ font-size:12px; opacity:.75; }
+  .ok{ color:#0a7a2f; opacity:1; }
+  .bad{ color:#b00020; opacity:1; }
+
+  .cols{
+    display:grid;
+    grid-template-columns: 1.25fr 1fr;
+    gap:14px;
+    margin-top:16px;
+    align-items:start;
+  }
+  .col{ display:flex; flex-direction:column; gap:14px; }
+
+  .card{
+    border-radius:20px;
+    padding:16px;
+    background:var(--card-bg);
+    box-shadow:var(--shadow);
+    backdrop-filter: blur(10px);
+    overflow:hidden;
+  }
+  .h{
+    font-weight:950;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:10px;
+    margin-bottom:10px;
+  }
+  .h .right{ display:flex; gap:8px; align-items:center; }
+
+  .small{ font-size:12px; color:var(--text-muted); }
+  .error{ color:#b00020; font-size:12px; white-space:pre-wrap; }
+
+  .classBox{ display:grid; grid-template-columns: 1fr 1fr; gap:12px; }
+  .pill{ border-radius:16px; padding:12px; background:rgba(0,0,0,.03); }
+  .pillTitle{ font-weight:950; font-size:12px; color:var(--text-muted); margin-bottom:6px; }
+  .big{ font-size:20px; font-weight:950; letter-spacing:-0.2px; line-height:1.2; }
+  .remain{ margin-top:10px; display:flex; flex-direction:column; gap:8px; }
+
+  .row{ display:flex; align-items:flex-start; gap:10px; }
+  .badge{
+    min-width:66px;
+    text-align:center;
+    font-weight:950;
+    padding:6px 10px;
+    border-radius:999px;
+    background:var(--muted);
+  }
+  .line{ font-weight:900; }
+  .subline{ font-size:12px; color:var(--text-muted); margin-top:2px; }
+
+  .mealTwo{ display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-top:6px; }
+  .mealCol{ border-radius:16px; padding:12px; background:rgba(0,0,0,.03); min-height:140px; }
+  .mealTitle{
+    font-weight:950; font-size:12px; color:var(--text-muted);
+    margin-bottom:8px; display:flex; align-items:center; gap:8px;
+  }
+  .menu{ white-space:pre-line; font-weight:900; line-height:1.35; font-size:13px; }
+
+  .calHead{ display:grid; grid-template-columns:repeat(7,1fr); gap:6px; margin-bottom:6px; }
+  .calHead div{ font-size:12px; font-weight:950; text-align:center; color:var(--text-muted); }
+  .calHead .sunH{ color:#d80000; }
+  .calHead .satH{ color:#0067ff; }
+
+  .calGrid{ display:grid; grid-template-columns:repeat(7,1fr); gap:6px; }
+  .cell{ border-radius:16px; background:rgba(0,0,0,.03); padding:8px; min-height:96px; overflow:hidden; }
+  .cell.muted{ opacity:.35; }
+  .cell.today{ outline:2px solid rgba(0,0,0,.18); }
+  .dayNum{ font-weight:950; font-size:12px; }
+  .dayNum.sun{ color:#d80000; }
+  .dayNum.sat{ color:#0067ff; }
+
+  .ev{
+    margin-top:4px;
+    font-size:11px;
+    font-weight:850;
+    line-height:1.2;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+    display:flex; align-items:center; gap:6px;
+  }
+  .tagLocal{
+    font-size:10px; font-weight:950;
+    padding:2px 6px; border-radius:999px;
+    background:rgba(0,0,0,.06);
+    color:rgba(0,0,0,.65);
+  }
+  .delBtn{
+    margin-left:auto;
+    border:none;
+    background:rgba(0,0,0,.06);
+    border-radius:8px;
+    padding:2px 6px;
+    cursor:pointer;
+    font-weight:950;
+    font-size:10px;
+  }
+
+  .addBox{
+    margin-top:12px;
+    border-radius:16px;
+    background:rgba(0,0,0,.03);
+    padding:12px;
+  }
+  input{
+    padding:8px;
+    border-radius:12px;
+    border:1px solid rgba(0,0,0,.12);
+    background:rgba(255,255,255,.85);
+    font-weight:850;
+  }
+
+  .todoItem{
+    display:flex;
+    align-items:flex-start;
+    gap:10px;
+    padding:8px 10px;
+    border-radius:12px;
+    background:rgba(255,255,255,.75);
+    border:1px solid rgba(0,0,0,.08);
+    margin-bottom:8px;
+  }
+  .todoItem input[type="checkbox"]{
+    width:18px; height:18px; margin-top:2px;
+  }
+  .todoText{
+    flex:1;
+    font-weight:900;
+    line-height:1.35;
+    outline:none;
+    word-break:keep-all;
+  }
+  .todoText.done{
+    text-decoration: line-through;
+    opacity:.55;
+  }
+  .todoDel{
+    border:none;
+    background:rgba(0,0,0,.06);
+    border-radius:10px;
+    padding:6px 8px;
+    cursor:pointer;
+    font-weight:950;
+    font-size:12px;
+  }
+
+  .footer{ margin-top:10px; opacity:.65; font-size:12px; }
+
+  @media (max-width: 900px){
+    .wrap{ padding:14px; }
+    .cols{ grid-template-columns: 1fr; }
+    .title{ font-size:24px; }
+    .classBox{ grid-template-columns:1fr; }
+    .mealTwo{ grid-template-columns:1fr; }
+    .cell{ min-height:78px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div>
+      <div class="title" id="todayTitle">로딩중…</div>
+      <div class="sub" id="todaySub"></div>
+    </div>
+
+    <div class="controls" id="controls">
+      <button id="btnToday">오늘</button>
+      <button id="btnTomorrow">내일</button>
+      <button id="btnReload">새로고침</button>
+      <span id="status" class="status"></span>
+    </div>
+  </div>
+
+  <div class="cols">
+    <div class="col">
+      <div class="card">
+        <div class="h">
+          <span id="classHeader">수업</span>
+          <span class="small" id="periodHint"></span>
+        </div>
+
+        <div class="classBox">
+          <div class="pill">
+            <div class="pillTitle">현재 수업</div>
+            <div class="big" id="currentClass">-</div>
+            <div class="small" id="currentTime"></div>
+          </div>
+
+          <div class="pill">
+            <div class="pillTitle">다음 수업</div>
+            <div class="big" id="nextClass">-</div>
+            <div class="small" id="nextTime"></div>
+          </div>
+        </div>
+
+        <div class="remain">
+          <div class="pillTitle">오늘 남은 수업</div>
+          <div id="remainList" class="small">-</div>
+        </div>
+
+        <div id="classErr" class="error" style="display:none;"></div>
+      </div>
+
+      <div class="card">
+        <div class="h" id="ttHeader">시간표</div>
+        <div id="ttList"></div>
+
+        <div class="addBox" style="margin-top:14px;">
+          <div class="h" style="margin-bottom:8px;">
+            <span>오늘 할 일</span>
+            <span class="small">미완료 자동 이월 · 전체기기 동기화</span>
+          </div>
+
+          <div style="display:flex; gap:8px; align-items:center;">
+            <input id="todoInput" type="text" placeholder="할 일 추가 후 Enter (예: 3-12 상담)" style="flex:1;">
+            <button id="todoAddBtn">추가</button>
+          </div>
+
+          <div id="todoList" style="margin-top:10px;"></div>
+
+          <div class="small" style="margin-top:8px;">
+            * 체크 안 한 항목은 다음날 자동으로 넘어갑니다.
+          </div>
+        </div>
+
+        <div class="addBox">
+          <div class="h" style="margin-bottom:8px;">
+            <span>내 일정 추가</span>
+            <span class="small">전체기기 동기화</span>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+            <input id="evStart" type="date" />
+            <input id="evEnd" type="date" />
+            <input id="evTitle" placeholder="일정명 (예: 학생부 회의)" style="grid-column:1/3;" />
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;margin-top:10px;">
+            <button id="btnAddLocal">추가</button>
+            <span id="addMsg" class="small"></span>
+          </div>
+          <div class="small" style="margin-top:8px;">
+            * 추가한 일정은 캘린더에 “내” 표시로 같이 나옵니다.
+          </div>
+        </div>
+
+        <div id="ttErr" class="error" style="display:none;"></div>
+      </div>
+    </div>
+
+    <div class="col">
+      <div class="card">
+        <div class="h">
+          <span id="mealHeader">급식</span>
+          <span class="small">중식 | 석식</span>
+        </div>
+
+        <div class="mealTwo">
+          <div class="mealCol">
+            <div class="mealTitle"><span class="badge" style="min-width:56px">중식</span></div>
+            <div id="lunchMenu" class="menu"></div>
+          </div>
+          <div class="mealCol">
+            <div class="mealTitle"><span class="badge" style="min-width:56px">석식</span></div>
+            <div id="dinnerMenu" class="menu"></div>
+          </div>
+        </div>
+
+        <div id="mealErr" class="error" style="display:none;"></div>
+        <div class="small" style="margin-top:10px;">* 주말/방학엔 급식이 없을 수 있어요.</div>
+      </div>
+
+      <div class="card">
+        <div class="h">
+          <span id="calTitle">학사일정</span>
+          <span class="right">
+            <button id="prevMon">◀</button>
+            <button id="nextMon">▶</button>
+          </span>
+        </div>
+
+        <div class="calHead">
+          <div class="sunH">일</div><div>월</div><div>화</div><div>수</div><div>목</div><div>금</div><div class="satH">토</div>
+        </div>
+
+        <div id="calGrid" class="calGrid"></div>
+        <div id="calErr" class="error" style="display:none;"></div>
+
+        <div class="small" style="margin-top:10px;">
+          * 캘린더엔 “시트 일정 + 내 일정”이 함께 표시됩니다.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">웹 버전: 모든 기기 동기화 · 자동 갱신</div>
+</div>
+
+<script>
+  // ================== 설정 ==================
+  const BASE = "https://script.google.com/macros/s/AKfycby4CtG8bRcEgp0_MLu8FpVgEssI8cpWs4t15mWzPoVPeSUaHtIpKJskKSZ8J1oQuqrd/exec";
+  const UPDATE_INTERVAL_MS = 10 * 60 * 1000;
+  // ================== /설정 ==================
+
+  const dayMap = ["일","월","화","수","목","금","토"];
+
+  const PERIODS = [
+    { p: 1, start: "08:40", end: "09:30" },
+    { p: 2, start: "09:40", end: "10:30" },
+    { p: 3, start: "10:40", end: "11:30" },
+    { p: 4, start: "11:40", end: "12:30" },
+    { p: 5, start: "13:20", end: "14:10" },
+    { p: 6, start: "14:20", end: "15:10" }
+  ];
+
+  let offsetDays = 0;
+  let calYear, calMonth;
+
+  const sig = {
+    header: "",
+    ttHtml: "",
+    classPanel: "",
+    mealSig: "",
+    calSig: ""
+  };
+
+  let currentTodoDate = "";
+  let todoUiWired = false;
+
+  function fmtDate(d){
+    const y=d.getFullYear();
+    const m=String(d.getMonth()+1).padStart(2,"0");
+    const dd=String(d.getDate()).padStart(2,"0");
+    return `${y}-${m}-${dd}`;
+  }
+
+  function escapeHtml(s){
+    return String(s)
+      .replaceAll("&","&amp;").replaceAll("<","&lt;")
+      .replaceAll(">","&gt;").replaceAll('"',"&quot;");
+  }
+
+  function setStatus(text, ok=true){
+    const el=document.getElementById("status");
+    el.textContent=text;
+    el.className = "status " + (ok ? "ok" : "bad");
+  }
+
+  function hideAllErrors(){
+    for (const id of ["classErr","ttErr","mealErr","calErr"]){
+      const el=document.getElementById(id);
+      el.style.display="none";
+      el.textContent="";
+    }
+  }
+
+  function showErr(id, msg){
+    const el=document.getElementById(id);
+    el.style.display="block";
+    el.textContent=msg;
+  }
+
+  function timeToMin(t){
+    const [h,m] = t.split(":").map(Number);
+    return h*60 + m;
+  }
+
+  function nowMin(){
+    const d=new Date();
+    return d.getHours()*60 + d.getMinutes();
+  }
+
+  async function fetchJson(url, options={}){
+    const res = await fetch(url, {
+      cache:"no-store",
+      ...options
+    });
+    return await res.json();
+  }
+
+  function renderTimetable(rows){
+    let html = "";
+    if(!rows || rows.length===0){
+      html = `<div class="small">표시할 시간표가 없어요(주말/방학/미입력).</div>`;
+    } else {
+      for (const r of rows) {
+        html += `
+          <div class="row">
+            <div class="badge">${Number(r.period)}교시</div>
+            <div>
+              <div class="line">${escapeHtml(r.subject||"")} (${escapeHtml(r.class||"")})</div>
+            </div>
+          </div>`;
+      }
+    }
+    if (html !== sig.ttHtml) {
+      sig.ttHtml = html;
+      document.getElementById("ttList").innerHTML = html;
+    }
+  }
+
+  function computeClasses(rows, targetDate){
+    const mins = nowMin();
+    const dow = targetDate.getDay();
+    if(dow === 0 || dow === 6){
+      return { current:null, next:null, remain:[], hint:"주말" };
+    }
+
+    const currentPeriod = PERIODS.find(p => mins >= timeToMin(p.start) && mins <= timeToMin(p.end));
+    const nextPeriod = PERIODS.find(p => mins < timeToMin(p.start));
+
+    const current = currentPeriod ? rows.find(r => Number(r.period) === currentPeriod.p) : null;
+    const next = nextPeriod ? rows.find(r => Number(r.period) === nextPeriod.p) : null;
+
+    const remain = PERIODS
+      .filter(p => mins < timeToMin(p.start))
+      .map(p => rows.find(r => Number(r.period) === p.p))
+      .filter(Boolean);
+
+    const hint = currentPeriod
+      ? `${currentPeriod.p}교시 진행 중`
+      : (nextPeriod ? `${nextPeriod.p}교시 전` : "수업 종료");
+
+    return { current, next, remain, currentPeriod, nextPeriod, hint };
+  }
+
+  function renderClassPanels(info){
+    const curText = info.current
+      ? `${info.current.subject} (${info.current.class})`
+      : "수업 없음";
+    const curTime = info.current && info.currentPeriod
+      ? `${info.currentPeriod.start} ~ ${info.currentPeriod.end}` : "";
+
+    const nextText = info.next
+      ? `${info.next.period}교시 ${info.next.subject} (${info.next.class})`
+      : "-";
+    const nextTime = info.next && info.nextPeriod
+      ? `${info.nextPeriod.start} ~ ${info.nextPeriod.end}` : "";
+
+    const remainHtml = (info.remain && info.remain.length)
+      ? info.remain.map(r => `<div class="small">${Number(r.period)}교시 ${escapeHtml(r.subject)} (${escapeHtml(r.class)})</div>`).join("")
+      : "없음";
+
+    const panelSig = [info.hint||"", curText, curTime, nextText, nextTime, remainHtml].join("||");
+
+    if (panelSig !== sig.classPanel) {
+      sig.classPanel = panelSig;
+      document.getElementById("periodHint").textContent = info.hint || "";
+      document.getElementById("currentClass").textContent = curText;
+      document.getElementById("currentTime").textContent = curTime;
+      document.getElementById("nextClass").textContent = nextText;
+      document.getElementById("nextTime").textContent = nextTime;
+      document.getElementById("remainList").innerHTML = remainHtml;
+    }
+  }
+
+  function renderMeal(meals){
+    const lunch = (meals||[]).find(m => m.meal==="중식");
+    const dinner = (meals||[]).find(m => m.meal==="석식");
+    const lunchText = lunch?.menu ? lunch.menu : "없음";
+    const dinnerText = dinner?.menu ? dinner.menu : "없음";
+
+    const mealSig = lunchText + "||" + dinnerText;
+    if (mealSig === sig.mealSig) return;
+    sig.mealSig = mealSig;
+
+    document.getElementById("lunchMenu").textContent = lunchText;
+    document.getElementById("dinnerMenu").textContent = dinnerText;
+  }
+
+  async function getMyEvents_(from, to){
+    const url = `${BASE}?type=myEvents&from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`;
+    const json = await fetchJson(url);
+    if(!json.ok) throw new Error(json.error || "내 일정 조회 실패");
+    return json.rows || [];
+  }
+
+  async function addMyEventServer_(start, end, title){
+    const url = `${BASE}?type=addEvent&start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}&title=${encodeURIComponent(title)}`;
+    const json = await fetchJson(url);
+    if(!json.ok) throw new Error(json.error || "일정 추가 실패");
+    return json.item;
+  }
+
+  async function deleteMyEventServer_(id){
+    const url = `${BASE}?type=deleteEvent&id=${encodeURIComponent(id)}`;
+    const json = await fetchJson(url);
+    if(!json.ok) throw new Error(json.error || "일정 삭제 실패");
+    return json.deleted;
+  }
+
+  function buildCalendar(year, month, sheetEvents, myEvents){
+    const events = [
+      ...(sheetEvents || []),
+      ...((myEvents || []).map(e => ({ ...e, isLocal: true })))
+    ];
+
+    const calSig = JSON.stringify({
+      y:year,
+      m:month,
+      ev:events.map(e=>({s:e.start,e:e.end,t:e.title,id:e.id||"",L:!!e.isLocal}))
+    });
+    if (calSig === sig.calSig) return;
+    sig.calSig = calSig;
+
+    document.getElementById("calTitle").textContent = `${year}년 ${month+1}월 학사일정`;
+
+    const grid=document.getElementById("calGrid");
+    const first=new Date(year, month, 1);
+    const last=new Date(year, month+1, 0);
+    const startDow=first.getDay();
+    const daysInMonth=last.getDate();
+    const todayStr = fmtDate(new Date());
+
+    let html = "";
+    for(let i=0;i<startDow;i++) html += `<div class="cell muted"></div>`;
+
+    for(let day=1; day<=daysInMonth; day++){
+      const d=new Date(year, month, day);
+      const dStr=fmtDate(d);
+      const dow=d.getDay();
+      const numClass = dow===0 ? "sun" : (dow===6 ? "sat" : "");
+      const todayCls = (dStr===todayStr) ? " today" : "";
+
+      const evs = events.filter(e => dStr >= e.start && dStr <= e.end).slice(0,3);
+
+      let evHtml = "";
+      for (const e of evs) {
+        evHtml += `
+          <div class="ev">
+            • ${escapeHtml(e.title||"")}
+            ${e.isLocal ? `<span class="tagLocal">내</span><button class="delBtn" data-id="${escapeHtml(e.id)}">삭제</button>` : ``}
+          </div>`;
+      }
+
+      html += `
+        <div class="cell${todayCls}">
+          <div class="dayNum ${numClass}">${day}</div>
+          ${evHtml}
+        </div>`;
+    }
+
+    const total = startDow + daysInMonth;
+    const pad = (7 - (total % 7)) % 7;
+    for(let i=0;i<pad;i++) html += `<div class="cell muted"></div>`;
+
+    grid.innerHTML = html;
+
+    grid.querySelectorAll(".delBtn").forEach(btn=>{
+      btn.addEventListener("click", async (ev)=>{
+        ev.stopPropagation();
+        const id = btn.getAttribute("data-id");
+        await deleteMyEventServer_(id);
+        await loadCalendarMonth();
+      });
+    });
+  }
+
+  async function loadCalendarMonth(){
+    const from = fmtDate(new Date(calYear, calMonth, 1));
+    const to   = fmtDate(new Date(calYear, calMonth+1, 0));
+
+    const calUrl = `${BASE}?type=calendar&from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`;
+
+    const [calJson, myEvents] = await Promise.all([
+      fetchJson(calUrl),
+      getMyEvents_(from, to)
+    ]);
+
+    if(!calJson.ok) throw new Error(`학사일정 오류: ${calJson.error || "unknown"}`);
+
+    buildCalendar(calYear, calMonth, calJson.rows || [], myEvents || []);
+  }
+
+  document.getElementById("btnAddLocal").addEventListener("click", async ()=>{
+    const s = document.getElementById("evStart").value;
+    const e = document.getElementById("evEnd").value;
+    const t = document.getElementById("evTitle").value.trim();
+    const msg=document.getElementById("addMsg");
+    msg.textContent = "";
+
+    if(!s || !e || !t){ msg.textContent = "시작/종료/일정명을 입력해줘."; return; }
+    if(s > e){ msg.textContent = "종료일은 시작일 이후여야 해."; return; }
+
+    await addMyEventServer_(s, e, t);
+    document.getElementById("evTitle").value = "";
+    msg.textContent = "추가됨!";
+    await loadCalendarMonth();
+  });
+
+  function getYesterday(dateObj){
+    const d = new Date(dateObj);
+    d.setDate(d.getDate() - 1);
+    return d;
+  }
+
+  async function fetchTodos_(dateStr){
+    const url = `${BASE}?type=todo&date=${encodeURIComponent(dateStr)}`;
+    const json = await fetchJson(url);
+    if(!json.ok) throw new Error(json.error || "할 일 조회 실패");
+    return json.todos || [];
+  }
+
+  async function addTodoServer_(dateStr, text){
+    const url = `${BASE}?type=addTodo&date=${encodeURIComponent(dateStr)}&text=${encodeURIComponent(text)}`;
+    const json = await fetchJson(url);
+    if(!json.ok) throw new Error(json.error || "할 일 추가 실패");
+    return json.item;
+  }
+
+  async function updateTodoServer_(id, text, done){
+    const params = new URLSearchParams({
+      type: "updateTodo",
+      id: id
+    });
+    if (text !== undefined) params.set("text", text);
+    if (done !== undefined) params.set("done", String(done));
+
+    const json = await fetchJson(`${BASE}?${params.toString()}`);
+    if(!json.ok) throw new Error(json.error || "할 일 수정 실패");
+    return json.updated;
+  }
+
+  async function deleteTodoServer_(id){
+    const url = `${BASE}?type=deleteTodo&id=${encodeURIComponent(id)}`;
+    const json = await fetchJson(url);
+    if(!json.ok) throw new Error(json.error || "할 일 삭제 실패");
+    return json.deleted;
+  }
+
+  async function ensureTodayTodos(dateObj){
+    const todayStr = fmtDate(dateObj);
+    const todayTodos = await fetchTodos_(todayStr);
+    if (todayTodos.length > 0) return todayStr;
+
+    const yStr = fmtDate(getYesterday(dateObj));
+    const yTodos = await fetchTodos_(yStr);
+
+    const carry = yTodos.filter(t => !t.done);
+    for (const t of carry){
+      await addTodoServer_(todayStr, t.text);
+    }
+    return todayStr;
+  }
+
+  async function setupTodos(dateObj){
+    currentTodoDate = await ensureTodayTodos(dateObj);
+    wireTodoUiOnce_();
+    await renderTodos_();
+  }
+
+  function wireTodoUiOnce_(){
+    if (todoUiWired) return;
+    todoUiWired = true;
+
+    const input = document.getElementById("todoInput");
+    const addBtn = document.getElementById("todoAddBtn");
+
+    const add = async ()=>{
+      const text = (input.value || "").trim();
+      if (!text) return;
+
+      await addTodoServer_(currentTodoDate, text);
+      input.value = "";
+      await renderTodos_();
+    };
+
+    addBtn.addEventListener("click", add);
+    input.addEventListener("keydown", (e)=>{
+      if (e.key === "Enter"){
+        e.preventDefault();
+        add();
+      }
+    });
+  }
+
+  async function renderTodos_(){
+    const list = document.getElementById("todoList");
+    const todos = await fetchTodos_(currentTodoDate);
+
+    if (!todos.length){
+      list.innerHTML = `<div class="small">할 일이 없어요. 위에 입력해서 추가해보세요.</div>`;
+      return;
+    }
+
+    let html = "";
+    for (const t of todos){
+      html += `
+        <div class="todoItem" data-id="${t.id}">
+          <input type="checkbox" class="todoChk" ${t.done ? "checked" : ""}>
+          <div class="todoText ${t.done ? "done" : ""}" contenteditable="true" spellcheck="false"></div>
+          <button class="todoDel" title="삭제">삭제</button>
+        </div>`;
+    }
+    list.innerHTML = html;
+
+    const items = list.querySelectorAll(".todoItem");
+    items.forEach((el, idx)=>{
+      el.querySelector(".todoText").textContent = todos[idx].text;
+    });
+
+    items.forEach((el, idx)=>{
+      const id = el.getAttribute("data-id");
+      const chk = el.querySelector(".todoChk");
+      const textEl = el.querySelector(".todoText");
+      const del = el.querySelector(".todoDel");
+      const original = todos[idx];
+
+      chk.addEventListener("change", async ()=>{
+        await updateTodoServer_(id, undefined, chk.checked);
+        textEl.classList.toggle("done", chk.checked);
+      });
+
+      del.addEventListener("click", async ()=>{
+        await deleteTodoServer_(id);
+        await renderTodos_();
+      });
+
+      textEl.addEventListener("blur", async ()=>{
+        const newText = (textEl.textContent || "").trim();
+        if (newText === original.text) return;
+        await updateTodoServer_(id, newText, undefined);
+      });
+
+      textEl.addEventListener("keydown", (e)=>{
+        if (e.key === "Enter"){
+          e.preventDefault();
+          textEl.blur();
+        }
+      });
+    });
+  }
+
+  async function loadAll(){
+    if (document.hidden) return;
+
+    hideAllErrors();
+
+    const now = new Date();
+    const target = new Date(now.getTime() + offsetDays*24*60*60*1000);
+    const dowName = dayMap[target.getDay()];
+    const prefix = offsetDays===0 ? "오늘" : "내일";
+
+    const headerSig = `${prefix}|${fmtDate(target)}|${dowName}`;
+    if (headerSig !== sig.header) {
+      sig.header = headerSig;
+      document.getElementById("todayTitle").textContent =
+        `${prefix} · ${target.getMonth()+1}월 ${target.getDate()}일 (${dowName})`;
+      document.getElementById("ttHeader").textContent = `${prefix} 시간표`;
+      document.getElementById("mealHeader").textContent = `${prefix} 급식`;
+      document.getElementById("classHeader").textContent = `${prefix} 수업`;
+    }
+    document.getElementById("todaySub").textContent =
+      `갱신: ${new Date().toLocaleTimeString("ko-KR")}`;
+
+    try{
+      setStatus("불러오는 중…", true);
+
+      await setupTodos(target);
+
+      const ttUrl   = `${BASE}?type=timetable&day=${encodeURIComponent(dowName)}`;
+      const mealUrl = `${BASE}?type=meal&date=${encodeURIComponent(fmtDate(target))}`;
+      const calFrom = fmtDate(new Date(calYear, calMonth, 1));
+      const calTo   = fmtDate(new Date(calYear, calMonth+1, 0));
+      const calUrl  = `${BASE}?type=calendar&from=${encodeURIComponent(calFrom)}&to=${encodeURIComponent(calTo)}`;
+
+      const [tt, meal, cal, myEvents] = await Promise.all([
+        fetchJson(ttUrl),
+        fetchJson(mealUrl),
+        fetchJson(calUrl),
+        getMyEvents_(calFrom, calTo)
+      ]);
+
+      if(!tt.ok)   throw new Error(`시간표 오류: ${tt.error || "unknown"}`);
+      if(!meal.ok) throw new Error(`급식 오류: ${meal.error || "unknown"}`);
+      if(!cal.ok)  throw new Error(`학사일정 오류: ${cal.error || "unknown"}`);
+
+      renderTimetable(tt.rows || []);
+
+      const classInfo = computeClasses(tt.rows || [], target);
+      renderClassPanels(classInfo);
+
+      renderMeal(meal.meals || []);
+
+      buildCalendar(calYear, calMonth, cal.rows || [], myEvents || []);
+
+      setStatus("업데이트 완료", true);
+    }catch(err){
+      setStatus("불러오기 실패", false);
+      const msg = String(err);
+
+      if(msg.includes("급식")) showErr("mealErr", msg);
+      else if(msg.includes("학사일정")) showErr("calErr", msg);
+      else if(msg.includes("시간표")) showErr("ttErr", msg);
+      else showErr("classErr", msg);
+    }
+  }
+
+  document.getElementById("btnToday").addEventListener("click", ()=>{ offsetDays=0; loadAll(); });
+  document.getElementById("btnTomorrow").addEventListener("click", ()=>{ offsetDays=1; loadAll(); });
+  document.getElementById("btnReload").addEventListener("click", loadAll);
+
+  document.getElementById("prevMon").addEventListener("click", async ()=>{
+    calMonth--; if(calMonth<0){ calMonth=11; calYear--; }
+    await loadAll();
+  });
+  document.getElementById("nextMon").addEventListener("click", async ()=>{
+    calMonth++; if(calMonth>11){ calMonth=0; calYear++; }
+    await loadAll();
+  });
+
+  (function init(){
+    const t = new Date();
+    calYear = t.getFullYear();
+    calMonth = t.getMonth();
+    loadAll();
+    setInterval(loadAll, UPDATE_INTERVAL_MS);
+  })();
+</script>
+</body>
+</html>
